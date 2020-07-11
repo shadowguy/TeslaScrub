@@ -27,20 +27,23 @@ config.read(f'{BASE_PATH}/config.ini')
 
 
 def setup_logging():
-	LOG_PATH = "{}/{}.log".format(BASE_PATH,
-								  os.path.basename(__file__).replace(".py", ""))
+    if config.getboolean('Internal', 'Debug'):
+         log.setLevel(logging.DEBUG)
+    else:
+         log.setLevel(logging.INFO)
 
-	if config.getboolean('Internal', 'Debug'):
-		log.setLevel(logging.DEBUG)
-	else:
-		log.setLevel(logging.INFO)
-	formatter = logging.Formatter('[ %(asctime)s ] [ %(levelname)5s ] [ %(name)s.%(funcName)s:%(lineno)s ] %(message)s')
-	handler = RotatingFileHandler(LOG_PATH, maxBytes=5 * 1024 ** 2, backupCount=5)
-	handler.setFormatter(formatter)
-	log.addHandler(handler)
+    if config.getboolean('Internal', 'Log'):
+         LOG_PATH = "{}/{}.log".format(BASE_PATH,
+                  os.path.basename(__file__).replace(".py", ""))
+         print("Messages logged to %s" % LOG_PATH )
 
-	# Quiet down requests lib as it prints private info
-	logging.getLogger("requests.packages.urllib3").setLevel(logging.INFO)
+         formatter = logging.Formatter('[ %(asctime)s ] [ %(levelname)5s ] [ %(name)s.%(funcName)s:%(lineno)s ] %(message)s')
+         handler = RotatingFileHandler(LOG_PATH, maxBytes=5 * 1024 ** 2, backupCount=5)
+         handler.setFormatter(formatter)
+         log.addHandler(handler)
+
+ # Quiet down requests lib as it prints private info
+    logging.getLogger("requests.packages.urllib3").setLevel(logging.INFO)
 
 def send_email(subject, body, from_email=config['Email']['FROM'], to_email=config['Email']['TO'], force=False):
 	seconds_since_last_email = time.time() % int(config['Email']['BORING_EMAIL_FREQUENCY'])
